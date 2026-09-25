@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-NG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>List a Property | NaijaBuy&Sell</title><meta name="description" content="List houses, land, apartments and commercial properties on NaijaBuy&Sell.">
+<link rel="stylesheet" href="src/styles.css"><style>
+.wrap{max-width:1000px;margin:auto;padding:25px 16px}.panel{background:#fff;border:1px solid #ddd;border-radius:16px;padding:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1/-1}input,select,textarea{padding:12px;border:1px solid #ccc;border-radius:9px}textarea{min-height:120px}.btn{padding:12px 18px;border:0;border-radius:9px;background:#16823b;color:#fff;font-weight:700}.muted{color:#666}@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a><nav><a href="index.html">Home</a><a href="search.html">Browse</a><a href="seller-dashboard.html">Sell</a></nav></div></header>
+<main class="wrap"><section class="panel"><h1>List a Property</h1><p class="muted">Add a house, apartment, land, shop, office, warehouse, estate or short-let property.</p>
+<form id="propertyForm"><div class="grid">
+<label class="field">Property type<select name="property_type" required><option>House</option><option>Apartment/Flat</option><option>Land</option><option>Office/Commercial</option><option>Shop</option><option>Warehouse</option><option>Estate/Development</option><option>Short-let</option></select></label>
+<label class="field">Purpose<select name="listing_purpose" required><option>For Sale</option><option>For Rent</option><option>For Lease</option></select></label>
+<label class="field">Price (₦)<input name="price" type="number" min="0" required></label>
+<label class="field">State<input name="state" required placeholder="e.g. Lagos"></label>
+<label class="field">City<input name="city" required placeholder="e.g. Ikeja"></label>
+<label class="field">Bedrooms<input name="bedrooms" type="number" min="0"></label>
+<label class="field">Bathrooms<input name="bathrooms" type="number" min="0" step="0.5"></label>
+<label class="field">Land/property size<input name="land_size" placeholder="e.g. 600 sqm"></label>
+<label class="field">Furnished<select name="furnished"><option value="false">No</option><option value="true">Yes</option></select></label>
+<label class="field full">Amenities<input name="amenities" placeholder="e.g. parking, swimming pool, security, generator"></label>
+<label class="field full">Property address<input name="property_address" required></label>
+<label class="field full">Title<input name="title" required maxlength="120" placeholder="e.g. 4 Bedroom Duplex in Lekki"></label>
+<label class="field full">Description<textarea name="description" required maxlength="5000" placeholder="Describe the property, facilities, title/tenure information, condition and important details."></textarea></label>
+<label class="field full">Property photos<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+<label class="field full"><button class="btn" type="submit">Submit property</button></label>
+</div></form><p id="message"></p></section></main>
+<script type="module">
+import {createPropertyListing} from './src/property-service.js';
+import {uploadListingImages} from './src/image-upload.js';
+const f=document.querySelector('#propertyForm'),m=document.querySelector('#message');
+f.addEventListener('submit',async e=>{e.preventDefault();const d=new FormData(f),files=[...document.querySelector('#photos').files];
+if(files.length>8)return m.textContent='Maximum 8 photos.';
+if(files.some(x=>x.size>5242880))return m.textContent='Each photo must be 5MB or smaller.';
+try{m.textContent='Submitting property...';const l=await createPropertyListing(Object.fromEntries(d));if(files.length)await uploadListingImages(l.id,files);f.reset();m.textContent='Property submitted and is awaiting moderation.'}catch(err){m.textContent=err.message||'Could not submit property.'}});
+</script></body></html>

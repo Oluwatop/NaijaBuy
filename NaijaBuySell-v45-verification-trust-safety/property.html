@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en-NG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Property Details | NaijaBuy&Sell</title><meta name="description" content="View property details, photos and seller information on NaijaBuy&Sell.">
+<link rel="stylesheet" href="src/styles.css"><style>
+.wrap{max-width:1050px;margin:auto;padding:24px 16px}.panel{background:#fff;border:1px solid #ddd;border-radius:16px;padding:20px;margin-bottom:18px}.gallery{display:grid;grid-template-columns:2fr 1fr;gap:10px}.gallery img{width:100%;height:260px;object-fit:cover;border-radius:10px;background:#eee}.gallery img:first-child{height:530px;grid-row:span 2}.details{display:grid;grid-template-columns:2fr 1fr;gap:18px}.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fact{padding:12px;background:#f6f6f6;border-radius:9px}.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#e7f5eb;color:#176b32;font-weight:700}.btn{display:inline-block;padding:11px 16px;border-radius:8px;background:#16823b;color:#fff;text-decoration:none;font-weight:700}.muted{color:#666}@media(max-width:700px){.gallery,.details{grid-template-columns:1fr}.gallery img:first-child{height:280px;grid-row:auto}.facts{grid-template-columns:1fr}}
+</style></head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a><nav><a href="property-search.html">Properties</a><a href="seller-profile.html">Seller Profiles</a></nav></div></header>
+<main class="wrap"><div id="app">Loading property...</div></main>
+<script type="module">
+import {togglePropertyFavorite,isPropertyFavorite} from "./src/property-favorites.js";
+import {getPropertyById} from './src/property-detail.js';
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const id=new URLSearchParams(location.search).get('id'); const app=document.querySelector('#app');
+async function run(){try{if(!id)throw Error('Property ID is missing.');const p=await getPropertyById(id);
+if(!p)throw Error('Property not found or not approved.');
+const imgs=(p.listing_images||[]).map(x=>x.public_url||x.url).filter(Boolean);
+app.innerHTML=`<section class="panel"><div class="gallery">${(imgs.length?imgs:['']).map((u,i)=>u?`<img src="${esc(u)}" alt="${esc(p.title)} photo ${i+1}">`:`<div class="fact">Property photos will appear here.</div>`).join('')}</div></section>
+<section class="details"><article class="panel"><span class="badge">${esc(p.listing_purpose)}</span><h1>${esc(p.title)}</h1><h2>₦${Number(p.price||0).toLocaleString()}</h2><p>${esc(p.city)}, ${esc(p.state)}</p><div class="facts">
+<div class="fact"><b>Type</b><br>${esc(p.property_type)}</div><div class="fact"><b>Bedrooms</b><br>${esc(p.bedrooms??'—')}</div><div class="fact"><b>Bathrooms</b><br>${esc(p.bathrooms??'—')}</div><div class="fact"><b>Size</b><br>${esc(p.land_size||'—')}</div><div class="fact"><b>Furnished</b><br>${p.furnished?'Yes':'No'}</div><div class="fact"><b>Location</b><br>${esc(p.city)}, ${esc(p.state)}</div></div><h3>Amenities</h3><p>${esc(p.amenities||'Not specified')}</p><h3>Description</h3><p>${esc(p.description||'')}</p><p class="muted">Exact property information and ownership claims should be independently verified before any transaction.</p></article>
+<aside class="panel"><h2>Seller / Agent</h2><p><b>${esc(p.seller_name||'NaijaBuy&Sell seller')}</b></p><p>${esc(p.seller_city||p.city||'')}</p><p>${p.seller_verified?'<span class="badge">Verified profile</span>':'Profile verification pending'}</p><a class="btn" href="seller-profile.html?id=${encodeURIComponent(p.seller_id)}">View profile</a> <a class="btn" href="property-enquiry.html?id=${encodeURIComponent(p.id)}">Contact seller</a><button id="fav" class="btn">Save property</button></aside></section>`;
+}catch(e){app.innerHTML=`<section class="panel"><h1>Property unavailable</h1><p>${esc(e.message)}</p></section>`}}
+run().then(async()=>{const b=document.querySelector("#fav");if(b){b.textContent=(await isPropertyFavorite(id))?"Saved":"Save property";b.onclick=async()=>{const on=await togglePropertyFavorite(id);b.textContent=on?"Saved":"Save property";}}});
+</script></body></html>

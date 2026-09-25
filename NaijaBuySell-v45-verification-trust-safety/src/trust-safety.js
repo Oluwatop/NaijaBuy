@@ -1,0 +1,3 @@
+import {supabase} from './supabase-client.js';
+const s=document.querySelector('#status');
+async function run(){const {data:{user}}=await supabase.auth.getUser();if(!user){s.textContent='Please sign in to view your verification status.';return}const {data,error}=await supabase.from('seller_profiles').select('verification_status,verification_level').eq('user_id',user.id).maybeSingle();if(error)throw error;s.innerHTML=data?`<span class="badge">${data.verification_status||'Unverified'}${data.verification_level?' · '+data.verification_level:''}</span>`:'<span class="badge">Unverified</span>'}run().catch(e=>s.textContent=e.message||'Unable to load status.')

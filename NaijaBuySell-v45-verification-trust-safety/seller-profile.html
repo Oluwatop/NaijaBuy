@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en-NG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seller Profile | NaijaBuy&Sell</title><link rel="stylesheet" href="src/styles.css">
+<style>.wrap{max-width:1050px;margin:auto;padding:25px 16px}.card{background:#fff;border:1px solid #ddd;border-radius:16px;padding:22px;margin-bottom:18px}.badge{display:inline-block;padding:5px 10px;border-radius:20px;background:#edf9f0;font-weight:700}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.stat{padding:16px;background:#f6f8f7;border-radius:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style>
+</head><body><header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a><nav><a href="index.html">Home</a><a href="search.html">Browse</a><a href="seller-dashboard.html">Sell</a></nav></div></header>
+<main class="wrap"><div class="card"><h1 id="name">Seller Profile</h1><p id="location" class="muted"></p><span id="verification" class="badge">Loading verification...</span></div>
+<div class="grid"><div class="stat"><b>Active listings</b><div id="active">0</div></div><div class="stat"><b>Completed sales</b><div id="sales">0</div></div><div class="stat"><b>Member since</b><div id="joined">—</div></div></div>
+<div class="card"><h2>About this seller</h2><p id="about" class="muted">Seller information will appear here.</p></div></main>
+<script type="module">
+import {loadSellerProfile} from './src/seller-profile.js';
+const id=new URLSearchParams(location.search).get('id');
+try{const p=await loadSellerProfile(id);document.querySelector('#name').textContent=p.display_name||'Seller';document.querySelector('#location').textContent=[p.city,p.state].filter(Boolean).join(', ');document.querySelector('#verification').textContent=p.verification_status==='verified'?'Verified Seller':'Verification pending';document.querySelector('#active').textContent=p.active_listings??0;document.querySelector('#sales').textContent=p.completed_sales??0;document.querySelector('#joined').textContent=p.created_at?new Date(p.created_at).toLocaleDateString():'—';document.querySelector('#about').textContent=p.bio||'No seller description yet.'}catch(e){document.querySelector('#about').textContent=e.message||'Seller profile unavailable.'}
+</script></body></html>

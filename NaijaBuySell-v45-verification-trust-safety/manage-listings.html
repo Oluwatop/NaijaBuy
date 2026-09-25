@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-NG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manage Listings | NaijaBuy&Sell</title><link rel="stylesheet" href="src/styles.css">
+<style>
+.wrap{max-width:1100px;margin:auto;padding:25px 16px}.panel{background:#fff;border:1px solid #ddd;border-radius:16px;padding:20px;margin-bottom:18px}
+.item{border-top:1px solid #eee;padding:16px 0;display:flex;justify-content:space-between;gap:15px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.edit{background:#f4c430}.danger{background:#b42318;color:#fff}.muted{color:#666}
+@media(max-width:700px){.item{flex-direction:column}}
+</style></head>
+<body>
+<header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a>
+<nav><a href="index.html">Home</a><a href="search.html">Browse</a><a href="seller-dashboard.html">Sell</a><a href="manage-listings.html">My Listings</a></nav></div></header>
+<main class="wrap"><section class="panel"><h1>My Listings</h1><p class="muted">Manage listings you created. Deleted listings are removed from your active inventory.</p><div id="message"></div><div id="items">Loading...</div></section>
+<section class="panel" id="editor" hidden><h2>Edit listing</h2><form id="form">
+<p><label>Title<br><input name="title" required maxlength="120"></label></p>
+<p><label>Price (₦)<br><input name="price" type="number" min="0" required></label></p>
+<p><label>Category<br><select name="category" required>
+<option>Electronics</option><option>Vehicles</option><option>Home</option><option>Appliances</option><option>Fashion</option><option>Phones</option><option>Computers</option><option>Real Estate & Properties</option><option>Other</option>
+</select></label></p>
+<p id="propertyFields" hidden>
+<label>Property type<br><select name="property_type"><option>House</option><option>Apartment/Flat</option><option>Land</option><option>Office/Commercial</option><option>Shop</option><option>Warehouse</option><option>Estate/Development</option><option>Short-let</option></select></label><br>
+<label>Listing purpose<br><select name="listing_purpose"><option>For Sale</option><option>For Rent</option><option>For Lease</option></select></label>
+</p>
+<p><label>Condition<br><input name="condition" required></label></p>
+<p><label>State<br><input name="state" required></label></p>
+<p><label>City<br><input name="city" required></label></p>
+<p><label>Description<br><textarea name="description" required></textarea></label></p>
+<button class="btn edit">Save changes</button> <button type="button" class="btn" id="cancel">Cancel</button>
+</form></section></main>
+<script type="module">
+import {getCurrentUser,getMyListings,updateListing,deleteListing} from './src/listing-management.js';
+const items=document.querySelector('#items'),msg=document.querySelector('#message'),editor=document.querySelector('#editor'),form=document.querySelector('#form'),cancel=document.querySelector('#cancel');
+const propertyFields=document.querySelector('#propertyFields'), categoryField=form.elements.category;
+categoryField?.addEventListener('change',()=>propertyFields.hidden=categoryField.value!=='Real Estate & Properties');
+let current=null;
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function show(t){msg.textContent=t}
+function render(list){items.innerHTML=list.length?list.map(x=>`<div class="item"><div><b>${esc(x.title)}</b><br>₦${Number(x.price||0).toLocaleString()} · ${esc(x.city)}, ${esc(x.state)}<br><small>Status: ${esc(x.status||'pending')}</small></div><div class="actions"><button class="btn edit" data-edit="${x.id}">Edit</button><button class="btn danger" data-delete="${x.id}">Delete</button></div></div>`).join(''):'<p>No listings found.</p>'}
+async function load(){render(await getMyListings())}
+if(!await getCurrentUser())location.href='login.html?redirect=manage-listings.html';else await load();
+items.addEventListener('click',async e=>{const id=e.target.dataset.edit||e.target.dataset.delete;if(!id)return;const list=await getMyListings(),x=list.find(a=>a.id===id);
+if(e.target.dataset.edit){current=x;for(const k of ['title','price','category','condition','state','city','description'])form.elements[k].value=x[k]??'';editor.hidden=false;scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
+if(e.target.dataset.delete&&confirm('Delete this listing?')){await deleteListing(id);show('Listing deleted.');await load()}})
+form.addEventListener('submit',async e=>{e.preventDefault();if(!current)return;const d=new FormData(form);await updateListing(current.id,Object.fromEntries(d));show('Listing updated.');editor.hidden=true;current=null;await load()});cancel.onclick=()=>{editor.hidden=true;current=null};
+</script></body></html>

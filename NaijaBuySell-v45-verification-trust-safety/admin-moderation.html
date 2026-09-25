@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en-NG"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Moderation | NaijaBuy&Sell</title><link rel="stylesheet" href="src/styles.css">
+<style>.wrap{max-width:1100px;margin:auto;padding:25px 16px}.panel{background:#fff;border:1px solid #ddd;border-radius:16px;padding:20px}.row{border-top:1px solid #eee;padding:16px 0;display:flex;justify-content:space-between;gap:15px}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.approve{background:#16823b;color:#fff}.reject{background:#b42318;color:#fff}.muted{color:#666}@media(max-width:700px){.row{flex-direction:column}}</style></head>
+<body><header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a><nav><a href="index.html">Home</a><a href="admin-moderation.html">Moderation</a></nav></div></header>
+<main class="wrap"><section class="panel"><h1>Listing Moderation</h1><p class="muted">Admin-only moderation queue. Approval should be enforced by Supabase RLS and admin role checks.</p><div id="items">Loading...</div></section></main>
+<script type="module">
+import {getPendingListings,moderateListing} from './src/admin-moderation.js';
+const box=document.querySelector('#items');const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){const list=await getPendingListings();box.innerHTML=list.length?list.map(x=>`<div class="row"><div><b>${esc(x.title)}</b><br>₦${Number(x.price||0).toLocaleString()} · ${esc(x.city)}, ${esc(x.state)}<br><small>${esc(x.description||'')}</small></div><div><button class="btn approve" data-action="approved" data-id="${x.id}">Approve</button> <button class="btn reject" data-action="rejected" data-id="${x.id}">Reject</button></div></div>`).join(''):'<p>No pending listings.</p>'}
+box.addEventListener('click',async e=>{if(!e.target.dataset.id)return;await moderateListing(e.target.dataset.id,e.target.dataset.action);await load()});load();
+</script></body></html>

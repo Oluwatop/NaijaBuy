@@ -1,0 +1,33 @@
+<!doctype html><html lang="en-NG"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seller Dashboard | NaijaBuy&Sell</title><link rel="stylesheet" href="src/styles.css">
+<style>
+.dashboard{max-width:1100px;margin:auto;padding:24px 16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.panel{background:#fff;border:1px solid #ddd;border-radius:16px;padding:20px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px}.full{grid-column:1/-1}input,select,textarea{padding:11px;border:1px solid #ccc;border-radius:9px}textarea{min-height:120px}.btn{padding:12px 16px;border:0;border-radius:9px;background:#16823b;color:#fff;font-weight:700}.notice{padding:12px;border-radius:9px;background:#f3f7f4}.error{background:#fff0f0;color:#9b1c1c}.success{background:#edf9f0;color:#166534}.listing{border-top:1px solid #eee;padding:14px 0}.status{font-size:12px;font-weight:700;background:#fff4c2;padding:4px 8px;border-radius:20px}@media(max-width:800px){.grid,.fields{grid-template-columns:1fr}.full{grid-column:auto}}
+</style></head><body>
+<header class="site-header"><div class="container header-inner"><a class="brand" href="index.html">NaijaBuy<span>&</span>Sell</a>
+<nav><a href="index.html">Home</a><a href="search.html">Browse</a><a href="seller-dashboard.html">Sell</a><a id="authLink" href="login.html">Login</a></nav></div></header>
+<main class="dashboard"><section class="panel"><h1>Seller Dashboard</h1><p>Create and manage your marketplace listings.</p><div id="message" class="notice" hidden></div></section>
+<div class="grid"><section class="panel"><h2>List an item</h2><form id="listingForm"><div class="fields">
+<label class="field full">Product title<input name="title" required maxlength="120"></label>
+<label class="field">Price (₦)<input name="price" type="number" min="0" required></label>
+<label class="field">Category<select name="category" required><option value="">Choose</option><option>Electronics</option><option>Vehicles</option><option>Home</option><option>Appliances</option><option>Fashion</option><option>Phones</option><option>Computers</option><option>Other</option></select></label>
+<label class="field">Condition<select name="condition" required><option value="">Choose</option><option>New</option><option>Used - Like New</option><option>Used - Good</option><option>Used</option><option>For Parts</option></select></label>
+<label class="field">State<input name="state" required placeholder="e.g. Oyo"></label>
+<label class="field">City<input name="city" required placeholder="e.g. Ibadan"></label>
+<label class="field full">Description<textarea name="description" required maxlength="5000"></textarea></label>
+<label class="field full">Photos (up to 8, max 5MB each)<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+<div class="full"><button class="btn" type="submit">Submit listing</button></div>
+</div></form></section>
+<section class="panel"><h2>My listings</h2><div id="history">Loading...</div></section></div></main>
+<script type="module">
+import {supabase,createListing,getCurrentUser,getMyListings} from './src/app-backend.js';
+import {uploadListingImages} from './src/image-upload.js';
+const form=document.querySelector('#listingForm'),history=document.querySelector('#history'),msg=document.querySelector('#message');
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show=(t,c='')=>{msg.hidden=false;msg.textContent=t;msg.className='notice '+c};
+function render(a){history.innerHTML=a?.length?a.map(x=>`<div class="listing"><b>${esc(x.title)}</b><br>₦${Number(x.price||0).toLocaleString()} · ${esc(x.city)}, ${esc(x.state)} <span class="status">${esc(x.status||'pending')}</span></div>`).join(''):'<p>No listings yet.</p>'}
+const user=await getCurrentUser(); if(!user){location.href='login.html?redirect=seller-dashboard.html'} else {render(await getMyListings());}
+form.addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const d=new FormData(form),files=[...document.querySelector('#photos').files];
+if(files.length>8)return show('Maximum 8 photos.','error');if(files.some(f=>f.size>5242880))return show('Each photo must be 5MB or smaller.','error');
+try{show('Creating listing...');const listing=await createListing({title:d.get('title'),price:Number(d.get('price')),category:d.get('category'),condition:d.get('condition'),state:d.get('state'),city:d.get('city'),description:d.get('description'),status:'pending'});if(files.length)await uploadListingImages(listing.id,files);form.reset();show('Listing submitted and awaiting moderation.','success');render(await getMyListings())}catch(err){show(err.message||'Could not create listing.','error')}});
+</script></body></html>
